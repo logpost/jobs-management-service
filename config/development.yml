@@ -1,20 +1,30 @@
 app:
-  kind: development
-  port: 8080
+    domain: localhost
+    kind: development
+    port: 8082
+
+jwt:
+    confirm_email:
+        secret:
+            jwt_secret: logpostemailconfirm
+        options:
+            expires_in: 14hr
+            issuer: logpost
+            audience: mailer
+    private_route:
+        secret:
+            jwt_secret: logpostprivateroute
+        options:
+            expires_in: 30d
+            issuer: logpost
+            audience: logpost
 
 db:
-  mongo:
-    username: root
-    password: root
-    host: localhost
-    port: 27017
-    name: todo_template
-    auth: admin
-    collection: todo
-
-queue:
-  connection:
-    username: guest
-    password: guest
-    host: 127.0.0.1
-    port: 5672
+    mongo:
+        username: root
+        password: root
+        host: localhost
+        port: 27017
+        name: logpost
+        auth: admin
+        collection: jobs_account

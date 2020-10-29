@@ -7,6 +7,7 @@ class MongoAdapter {
     connect(`mongodb://${host}:${post}/${dbName}?authSource=${authName}`, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      useCreateIndex: true
     })
     // connect(`mongodb://${username}:${password}@${host}:${post}/${dbName}?authSource=${authName}`, {
     //   useNewUrlParser: true,
@@ -18,7 +19,7 @@ class MongoAdapter {
   }
 
   private connected() {
-    console.log('Mongoose has connected')
+    console.log('Mongoose has connected 🎉')
   }
 
   private error(error: Error) {

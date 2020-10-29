@@ -1,21 +1,21 @@
-import { TodoInterface } from './todo.interface'
+import { JobInterface } from './job.interface'
 interface dataInterface {
-  code: number
-  message: string
+	code: number
+	message: string
 }
 
 export interface SuccessInterface {
-  success: dataInterface
+	success: dataInterface
 }
 
 export interface ErrorInterface {
-  error: dataInterface
+	error: dataInterface
 }
 
 export type ResponseInterface =
-  | String
-  | Error
-  | SuccessInterface
-  | ErrorInterface
-  | TodoInterface
-  | TodoInterface[]
+	| String
+	| Error
+	| SuccessInterface
+	| ErrorInterface
+	| JobInterface
+	| JobInterface[]

@@ -1,11 +1,11 @@
 import fastify, { FastifyInstance } from 'fastify'
 import config from './config/config'
 import MongoAdapter from './adapters/mongo.adapter'
-import RabbitMQAdapter from './adapters/rabbitmq.adapter'
 
 class App {
   public app: FastifyInstance
-  public portApp: number = parseInt(`${config.app.port}`, 10) ?? 8080
+  public app_doamain: string = config.app.domain
+  public app_port: number = parseInt(`${config.app.port}`, 10) ?? 8080
 
   private databaseInfo = {
     username: config.db.mongo.username!,
@@ -16,20 +16,11 @@ class App {
     authName: config.db.mongo.auth!,
   }
 
-  private queueInfo = {
-    username: config.queue.connection.username!,
-    password: config.queue.connection.password!,
-    host: config.queue.connection.host!,
-    port: parseInt(`${config.queue.connection.port}`, 10) ?? 5672,
-  }
-
-  constructor(appInit: { middleWares: { before: any; after: any }; routes: any }) {
+  constructor(appInit: { plugins: any; routes: any }) {
     this.app = fastify({ logger: true })
-    // this.connectQueue()
     this.connectDatabase()
-    // this.middlewares(appInit.middleWares.before)
-    this.routes(appInit.routes)
-    // this.middlewares(appInit.middleWares.after)
+    this.pluginsRegister(appInit.plugins)
+    this.routes(appInit.routes) 
   }
 
   private async connectDatabase() {
@@ -37,28 +28,22 @@ class App {
     await new MongoAdapter(username, password, host, port, dbName, authName)
   }
 
-  private async connectQueue() {
-    await RabbitMQAdapter.getInstance(this.queueInfo)
+  private pluginsRegister(plugins: { forEach: (arg0: (plugins: any) => void) => void }) {
+    plugins.forEach((plugin) => {
+      this.app.register(plugin)
+    })
   }
-
-  // private middlewares(middleWares: { forEach: (arg0: (middleWare: any) => void) => void }) {
-  //   middleWares.forEach((middleWare) => {
-  //     this.app.register(middleWare)
-  //   })
-  // }
 
   public routes(routes: { forEach: (arg0: (routes: any) => void) => void }) {
     routes.forEach((route) => {
       let router = new route()
       this.app.register(router.routes, { prefix: router.prefix_route })
     })
-
-    this.app.get('/healthcheck', async (request, reply) => { reply.send({healthcheck: "server is alive"}) })
   }
 
   public listen() {
-    this.app.listen(this.portApp, () => {
-      console.log(`App listening on the http://localhost:${this.portApp}`)
+    this.app.listen(this.app_port, () => {
+      console.log(`Jobs Management Service 💰💸 \nlistening on the http://${this.app_doamain}:${this.app_port} 🌟`)
     })
   }
 }

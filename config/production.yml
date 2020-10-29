@@ -1,20 +1,13 @@
 app:
-  kind: production
-  port: 8080
+    kind: production
+    port: 8081
 
 db:
-  mongo:
-    username: root
-    password: root
-    host: mongo
-    port: 27017
-    name: todo_template
-    auth: admin
-    collection: todo
-
-queue:
-  connection:
-    username: guest
-    password: guest
-    host: rabbitmq
-    port: 5672
+    mongo:
+        username: root
+        password: root
+        host: mongo
+        port: 27017
+        name: jobs_development
+        auth: admin
+        collection: jobs_account
