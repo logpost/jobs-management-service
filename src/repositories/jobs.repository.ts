@@ -41,16 +41,15 @@ class JobsRepository {
 	// 	return result
 	// }
 
-	// public async findPasswordHashedByIdentifier(identifier: identifierDTO): Promise<string | null> {
-	// 	const { password: hashed } = (await this._model.findOne(identifier)) as JobInterface
-	// 	return hashed
-	// }
+	public async findAllJobs(): Promise<JobInterface[]> {
+		return await this._model.find({})
+	}
 
-	// public async createJobsAccount(jobs_account: createDTO): Promise<string> {
-	// 	const mongooseModel = new this._model(jobs_account)
-	// 	const { _id: jobs_id } = await mongooseModel.save()
-	// 	return jobs_id as string
-	// }
+	public async createJob(jobinfo: createJobDTO): Promise<string> {
+		const mongooseModel = new this._model(jobinfo)
+		const { _id: job_id } = await mongooseModel.save()
+		return job_id as string
+	}
 
 	// public async updateEmailByIdentifier(identifier: identifierDTO, email: string): Promise<string> {
 	// 	const { _id: jobs_id } = await this._model.updateOne(identifier, { $set: { email } })

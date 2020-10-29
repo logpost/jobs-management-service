@@ -11,11 +11,11 @@ class JobsRoutes {
   async routes(fastify: FastifyInstance, opts: FastifyPluginOptions, done: any) {
 
     fastify.get(`/healthcheck`, async (request, reply) => {
-      responseHandler(async () => {
-        return {healthcheck: "server is alive"}
-      }, reply)
-      await reply
-    })
+		responseHandler(async () => {
+			return {healthcheck: "server is alive"}
+		}, reply)
+		await reply
+	})
 
     // fastify.get(`/admin/profile/:username`, { preValidation: [(fastify as any).authenticate] }, async (request, reply) => {
     //   responseHandler(async () => {
@@ -35,16 +35,27 @@ class JobsRoutes {
     //   await reply
     // })
 
-    // fastify.post(`/create`, async (request, reply) => {
-    //   responseHandler(async () => {
-    //     const req: createDTO = request.body as createDTO   
-    //     let { email, ...jobs_account } = req 
-    //     const data = await JobsUsecase.createJobsAccount(jobs_account)
-    //     return data
+    fastify.get(`/all`, async (request, reply) => {
+      responseHandler(async () => {
+        const data = await JobsUsecase.findAllJobs()
+        return data
+      }, reply)
+      await reply
+    })
 
-    //   }, reply)
-    //   await reply
-    // })
+    fastify.post(`/create`, { preValidation: [(fastify as any).authenticate] }, async (request, reply) => {
+		responseHandler(async () => {
+			const { sub: shipper_id, display_name, role } = request.user as Payload
+			if(role === 'shipper'){
+				const info : createJobDTO = request.body as createJobDTO   
+				const jobinfo = { ...info, owner_display_name: display_name, shipper_id}
+				const data = await JobsUsecase.createJob(role, shipper_id, jobinfo)
+				return data
+			}
+			throw new Error('400 : Not shipper account')
+		}, reply)
+		await reply
+	})
     
     // // This route have vulnerability at client, we should use this route service to service for policy.
     // fastify.put(`/confirmed_email`, { preValidation: [(fastify as any).authenticate] }, async (request, reply) => {

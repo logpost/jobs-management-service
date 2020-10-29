@@ -8,6 +8,7 @@ export const JobSchema = new mongoose.Schema(
 		carrier_id: { type: mongoose.Schema.Types.ObjectId, default: null },
 		driver_id: { type: mongoose.Schema.Types.ObjectId, default: null },
 		truck_id: { type: mongoose.Schema.Types.ObjectId, default: null },
+		owner_display_name: { type: String, required: true, default: ''},
 		pickup_location: { type: String, default: '' }, // Google GPS Object (mock)
 		dropoff_location: { type: String, default: '' }, // Google GPS Object (mock)
 		pickup_date: { type: Date, required: true },

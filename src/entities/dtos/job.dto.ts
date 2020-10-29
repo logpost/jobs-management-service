@@ -5,6 +5,7 @@ interface createJobDTO {
 	carrier_id?: string
 	driver_id?: string
 	truck_id?: string
+	owner_display_name: string
 	pickup_location?: string //***
 	dropoff_location?: string //***
 	pickup_date: Date
