@@ -1,13 +1,12 @@
 import * as mongoose from 'mongoose'
-
 import CarrierSpecificationSchema from './carrier.spec.schema'
 
 export const JobSchema = new mongoose.Schema(
 	{
-		shipper_id: { type: mongoose.Schema.Types.ObjectId, required: true },
-		carrier_id: { type: mongoose.Schema.Types.ObjectId, default: null },
-		driver_id: { type: mongoose.Schema.Types.ObjectId, default: null },
-		truck_id: { type: mongoose.Schema.Types.ObjectId, default: null },
+		shipper_id: { type: String, required: true },
+		carrier_id: { type: String, default: null },
+		driver_id: { type: String, default: null },
+		truck_id: { type: String, default: null },
 		owner_display_name: { type: String, required: true, default: ''},
 		pickup_location: { type: String, default: '' }, // Google GPS Object (mock)
 		dropoff_location: { type: String, default: '' }, // Google GPS Object (mock)
