@@ -1,13 +1,41 @@
 app:
+    domain: localhost
     kind: production
-    port: 8081
+    port: 8082
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImpvYnMtbWFuYWdlbWVudC1zZXJ2aWNlIiwiaWF0IjoxNjA0MDExMzYxLCJhdWQiOiJqb2JzLW1hbmFnZW1lbnQtc2VydmljZSIsImlzcyI6ImpvYnMtbWFuYWdlbWVudC1zZXJ2aWNlIiwic3ViIjoiam9icy1tYW5hZ2VtZW50LXNlcnZpY2UifQ.8-Y94inNy9N_xiWM4F_g161PgA0lq5H5XBMs77kYyRk
+
+jwt:
+    confirm_email:
+        secret:
+            jwt_secret: logpostemailconfirm
+        options:
+            expires_in: 14hr
+            issuer: logpost
+            audience: mailer
+    private_route:
+        secret:
+            jwt_secret: logpostprivateroute
+        options:
+            expires_in: 30d
+            issuer: logpost
+            audience: logpost
+
+shipper:
+    api:
+        base_url: http://127.0.0.1:8080
+        prefix_route: /shipper
+
+carrier:
+    api:
+        base_url: http://127.0.0.1:8081
+        prefix_route: /carrier
 
 db:
     mongo:
         username: root
         password: root
-        host: mongo
+        host: localhost
         port: 27017
-        name: jobs_development
+        name: logpost
         auth: admin
-        collection: jobs_account
+        collection: jobs
