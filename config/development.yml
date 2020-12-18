@@ -21,22 +21,23 @@ jwt:
             audience: logpost
 
 shipper:
-  api:
-    base_url: http://127.0.0.1:8080
-    prefix_route: /shipper
+    api:
+        base_url: http://127.0.0.1:8080
+        prefix_route: /shipper
 
 carrier:
-  api:
-    base_url: http://127.0.0.1:8081
-    prefix_route: /carrier
-
+    api:
+        base_url: http://127.0.0.1:8081
+        prefix_route: /carrier
 
 db:
+    required:
+        isAuth: false
     mongo:
-        username: root
-        password: root
-        host: localhost
-        port: 27017
-        name: logpost
-        auth: admin
+        protocal: mongodb
+        username: null
+        password: null
+        host: localhost:27017
+        database: logpost
+        options: ?authSource=admin
         collection: jobs
