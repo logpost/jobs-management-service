@@ -1,7 +1,7 @@
 import { CarrierSpecificationInterface } from '../interfaces/data/carrier.spec.interface'
 
 interface createJobDTO {
-	shipper_id: string 
+	shipper_id: string
 	carrier_id?: string
 	driver_id?: string
 	truck_id?: string
@@ -51,4 +51,4 @@ interface whitelistUpdateJobDTO {
 	waiting_time?: number
 }
 
-export { createJobDTO, updateJobInfoDTO, whitelistUpdateJobDTO, deleteJobDTO}
+export { createJobDTO, updateJobInfoDTO, whitelistUpdateJobDTO, deleteJobDTO }
