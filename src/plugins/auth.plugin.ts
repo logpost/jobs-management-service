@@ -6,22 +6,26 @@ import { responseSender } from '../helper/response.handler'
 import parseResponse from '../helper/response.parser'
 
 const authPlugin = (fastify: FastifyInstance, opts: FastifyPluginOptions, done: any) => {
+	fastify.register(fastifyJwt, {
+		secret: config.jwt.private_route.secret.jwt_secret,
+	})
 
-    fastify.register(fastifyJwt, {
-        secret: config.jwt.private_route.secret.jwt_secret
-    })
+	fastify.decorate('verifyAuth', async (request: FastifyRequest, reply: FastifyReply) => {
+		try {
+			const auth: string | undefined = request.headers.authorization
+			const token = auth!.split(' ')[1]
+			if (token) {
+				const decodedToken: any = fastify.jwt.decode(token)
+				const { isConfirmEmail } = decodedToken
+				if (!isConfirmEmail) throw { statusCode: 403, message: "your email haven't confirmed." }
+			}
+			await request.jwtVerify()
+		} catch (err) {
+			responseSender(parseResponse(new Error(`${err.statusCode}: Unauthorize, ${err.message}`)), reply)
+		}
+	})
 
-    fastify.decorate("verifyAuth", async (request: FastifyRequest, reply: FastifyReply) => {
-        try {
-            await request.jwtVerify()
-        } catch (err) {
-            responseSender(
-                parseResponse(new Error(`${err.statusCode}: Unauthorize, ${err.message}`))
-            , reply)
-        }
-    })
-
-    done()
+	done()
 }
 
 export default fastifyPlugin(authPlugin)
