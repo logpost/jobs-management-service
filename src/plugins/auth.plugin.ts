@@ -17,7 +17,7 @@ const authPlugin = (fastify: FastifyInstance, opts: FastifyPluginOptions, done: 
 			if (token) {
 				const decodedToken: any = fastify.jwt.decode(token)
 				const { isConfirmEmail } = decodedToken
-				if (!isConfirmEmail) throw { statusCode: 403, message: "your email haven't confirmed." }
+				if (!isConfirmEmail) throw { statusCode: 401, message: "your email haven't confirmed." }
 			}
 			await request.jwtVerify()
 		} catch (err) {
