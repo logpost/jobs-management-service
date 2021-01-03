@@ -1,25 +1,26 @@
 import * as mongoose from 'mongoose'
 
-const TruckTypeSchema = new mongoose.Schema(
-    {
-        wheel: { type: Number, require: true, default: 4 },
-        options: { type: String, default: '' },
-    },
-    {
-        _id: false,
-        strict: false
-    }
+const TruckPropertySchema = new mongoose.Schema(
+	{
+		type: { type: String, required: true },
+		option: { type: String, required: true },
+		chassis: { type: Number, default: 0 },
+	},
+	{
+		_id: false,
+		strict: false,
+	},
 )
 
 const TruckSpecificationSchema = new mongoose.Schema(
-    {
-        age: { type: Number, max: 10, default: 0 },
-        type: { type: TruckTypeSchema },
-    },
-    {
-        _id: false,
-        strict: false,
-    }
+	{
+		age: { type: Number, max: 10, default: 0 },
+		property: { type: TruckPropertySchema },
+	},
+	{
+		_id: false,
+		strict: false,
+	},
 )
 
 export default TruckSpecificationSchema

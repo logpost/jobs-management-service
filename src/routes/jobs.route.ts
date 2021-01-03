@@ -47,7 +47,7 @@ class JobsRoutes {
 		responseHandler(async () => {
       const { sub: shipper_id, display_name, role } = request.user as Payload
 			if(role === 'shipper'){
-        const info : createJobDTO = request.body as createJobDTO   
+            const info : createJobDTO = request.body as createJobDTO   
 				const jobinfo = { ...info, owner_display_name: display_name, shipper_id}
 				const data = await JobsUsecase.createJob(role, shipper_id, jobinfo)
 				return data

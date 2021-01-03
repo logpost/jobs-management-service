@@ -1,9 +1,9 @@
-export interface TruckTypeInterface {
-    wheel: number
-    options: string
+export interface TruckPropertyInterface {
+	type: string
+	option: string
+	chassis?: number
 }
-
 export interface TruckSpecificationInterface {
-    age: number
-    type: TruckTypeInterface
+	age: number
+	property: TruckPropertyInterface
 }
