@@ -1,13 +1,13 @@
 import { CarrierSpecificationInterface } from '../interfaces/data/carrier.spec.interface'
-
+import { LocationInterface } from '../interfaces/data/location.interface'
 interface createJobDTO {
 	shipper_id: string
 	carrier_id?: string
 	driver_id?: string
 	truck_id?: string
 	owner_display_name: string
-	pickup_location?: string //***
-	dropoff_location?: string //***
+	pickup_location: LocationInterface
+	dropoff_location: LocationInterface
 	pickup_date: Date
 	dropoff_date: Date
 	weight: number
@@ -35,8 +35,8 @@ interface whitelistUpdateJobDTO {
 	carrier_id?: string
 	driver_id?: string
 	truck_id?: string
-	pickup_location?: string //***
-	dropoff_location?: string //***
+	pickup_location?: LocationInterface
+	dropoff_location?: LocationInterface
 	pickup_date?: Date
 	dropoff_date?: Date
 	weight?: number
