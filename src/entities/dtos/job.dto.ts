@@ -21,20 +21,29 @@ interface createJobDTO {
 	permission: string
 	waiting_time: number
 }
-
 interface deleteJobDTO {
 	job_id: string
 }
-
-interface updateJobInfoDTO {
+interface pickJobDTO {
 	job_id: string
-	jobinfo: whitelistUpdateJobDTO
+	driver_id: string
+	truck_id: string
 }
 
-interface whitelistUpdateJobDTO {
-	carrier_id?: string
+interface whitelistPickerJobDTO {
+	carrier_id: string
+}
+interface updateJobInfoDTO {
+	job_id: string
+	driver_tel?: string | undefined
+	jobinfo: whitelistUpdateJobDTO
+}
+interface whitelistUpdateJobForCarrierDTO {
 	driver_id?: string
 	truck_id?: string
+	status?: number
+}
+interface whitelistUpdateJobForShipperDTO {
 	pickup_location?: LocationInterface
 	dropoff_location?: LocationInterface
 	pickup_date?: Date
@@ -43,12 +52,29 @@ interface whitelistUpdateJobDTO {
 	carrier_specification?: CarrierSpecificationInterface
 	product_type?: string
 	offer_price?: number
-	auto_price?: number
 	description?: string
 	status?: number
 	distance?: number
 	permission?: string
 	waiting_time?: number
 }
+interface whitelistUpdateJobForDriverDTO {
+	status: number
+}
 
-export { createJobDTO, updateJobInfoDTO, whitelistUpdateJobDTO, deleteJobDTO }
+type whitelistUpdateJobDTO =
+	| whitelistUpdateJobForCarrierDTO
+	| whitelistUpdateJobForShipperDTO
+	| whitelistUpdateJobForDriverDTO
+	| whitelistPickerJobDTO // only carrier
+
+export {
+	createJobDTO,
+	deleteJobDTO,
+	pickJobDTO,
+	updateJobInfoDTO,
+	whitelistUpdateJobDTO,
+	whitelistUpdateJobForCarrierDTO,
+	whitelistUpdateJobForShipperDTO,
+	whitelistUpdateJobForDriverDTO,
+}
