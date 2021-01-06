@@ -31,15 +31,17 @@ class JobsRepository {
 
 	// // ##### CARRIER REPOSITORY
 
-	// public async findJobsByIdentifier(identifier: identifierDTO): Promise<JobInterface | null> {
-	// 	const result: JobInterface | null = await this._model.findOne(identifier, {
-	// 		_id: 0,
-	// 		password: 0,
-	// 		created_at: 0,
-	// 		updated_at: 0,
-	// 	})
-	// 	return result
-	// }
+	public async findJobsByJobId(job_id: string): Promise<JobInterface | null> {
+		const result: JobInterface | null = await this._model.findOne(
+			{ job_id },
+			{
+				_id: 0,
+				created_at: 0,
+				updated_at: 0,
+			},
+		)
+		return result
+	}
 
 	public async findAllJobs(): Promise<JobInterface[]> {
 		return await this._model.find({})
@@ -47,14 +49,14 @@ class JobsRepository {
 
 	public async createJob(jobinfo: createJobDTO): Promise<string> {
 		const mongooseModel = new this._model(jobinfo)
-		const { _id: job_id } = await mongooseModel.save()
+		const { job_id } = await mongooseModel.save()
 		return job_id as string
 	}
 
-	// public async updateEmailByIdentifier(identifier: identifierDTO, email: string): Promise<string> {
-	// 	const { _id: jobs_id } = await this._model.updateOne(identifier, { $set: { email } })
-	// 	return jobs_id as string
-	// }
+	public async updateJobsInfoByJobId(job_id: string, jobinfo: whitelistUpdateJobDTO): Promise<number> {
+		const result = await this._model.updateOne({ job_id }, { $set: jobinfo })
+		return result.n
+	}
 
 	// public async updateProfileJobsAccountByIdentifier(
 	// 	identifier: identifierDTO,

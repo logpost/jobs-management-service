@@ -1,15 +1,16 @@
 import { Document } from 'mongoose'
 import { CarrierSpecificationInterface } from './carrier.spec.interface'
+import { LocationInterface } from './location.interface'
 
 interface JobDocument extends Document {
-	readonly job_id: string 
-	readonly shipper_id: string 
-	readonly jobs_id: string
+	readonly job_id: string
+	readonly shipper_id: string
+	readonly carrier_id: string
 	readonly driver_id: string
 	readonly truck_id: string
 	readonly owner_display_name: string
-	readonly pickup_location: string //***
-	readonly dropoff_location: string //***
+	readonly pickup_location: LocationInterface
+	readonly dropoff_location: LocationInterface
 	readonly pickup_date: Date
 	readonly dropoff_date: Date
 	readonly weight: number

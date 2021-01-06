@@ -4,6 +4,7 @@ import LocationSchema from './location.schema'
 
 export const JobSchema = new mongoose.Schema(
 	{
+		job_id: { type: mongoose.Schema.Types.ObjectId, index: true, required: true, auto: true },
 		shipper_id: { type: String, required: true },
 		carrier_id: { type: String, default: null },
 		driver_id: { type: String, default: null },

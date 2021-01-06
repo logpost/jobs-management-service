@@ -2,32 +2,11 @@ import AccountFactoryInterface from '../entities/interfaces/data/account.factory
 import AccountFactory from '../factorys/account.factory'
 import { JobInterface } from '../entities/interfaces/data/job.interface'
 import JobsRepository from '../repositories/jobs.repository'
-import { hashing, compareHashed } from '../helper/hashing.handler'
-import { createJobDTO, updateJobInfoDTO, deleteJobDTO } from '../entities/dtos/job.dto'
+import { createJobDTO, updateJobInfoDTO, deleteJobDTO, pickJobDTO } from '../entities/dtos/job.dto'
+import * as Validator from '../helper/validate.helper'
+import { Payload } from '../entities/dtos/token.dto'
 
 const fetcher = new AccountFactory()
-
-// async function adminFindJobsByIdentifier(identifier: identifierDTO): Promise<JobsInterface> {
-// 	try {
-// 		const jobsRepository = JobsRepository.getInstance()
-// 		const data = await jobsRepository.adminFindJobsByIdentifier(identifier)
-// 		if (data) return data
-// 	} catch (error) {
-// 		throw new Error(`400 : Save data is not successfully`)
-// 	}
-// 	throw new Error(`404 : username is not exist in database`)
-// }
-
-// async function findProfileJobsAccountByUsername(identifier: identifierDTO): Promise<JobsInterface> {
-// 	try {
-// 		const jobsRepository = JobsRepository.getInstance()
-// 		const data = await jobsRepository.findJobsByIdentifier(identifier)
-// 		if (data) return data
-// 	} catch (error) {
-// 		throw new Error(`400 : Save data is not successfully`)
-// 	}
-// 	throw new Error(`404 : username is not exist in database`)
-// }
 
 async function findAllJobs(): Promise<JobInterface[]> {
 	try {
@@ -42,112 +21,147 @@ async function createJob(role: string, shipper_id: string, jobinfo: createJobDTO
 	const jobsRepository = JobsRepository.getInstance()
 	try {
 		const job_id = await jobsRepository.createJob(jobinfo)
-		if(job_id){
-			await fetcher.account[role as keyof AccountFactoryInterface].updateJobHistory(shipper_id, job_id)
-			return `201 : Create job is successfully`
+		if (job_id) {
+			const res = await fetcher.account[role as keyof AccountFactoryInterface].updateJobHistory(
+				{ shipper_id },
+				job_id,
+			)
+			if (res.data) return `201 : Create job is successfully`
+			throw new Error(`400 : Create job is not successfully`)
 		}
 		throw new Error(`400 : Create job is not successfully`)
 	} catch (err) {
 		console.log(err)
 		throw new Error(`400 : Create job is not successfully`)
-	} 
+	}
 }
 
-// async function confirmedWithEmail(req: confirmedEmailDTO): Promise<string> {
-// 	const jobsRepository = JobsRepository.getInstance()
-// 	let { identifier, email } = req
-// 	const account = await jobsRepository.findJobsByIdentifier(identifier)
+async function pickJob(account: Payload, infopicked: pickJobDTO): Promise<string> {
+	const { sub: carrier_id, username } = account
+	const { driver_id, truck_id, job_id } = infopicked
+	const jobsRepository = JobsRepository.getInstance()
+	const job = await jobsRepository.findJobsByJobId(job_id)
+	if (job) {
+		const { carrier_id: carrier_picked } = job
+		if (!carrier_picked) {
+			const { data: carrier } = await fetcher.account['carrier'].findAccountByUsername(username)
+			if (carrier) {
+				const { trucks, drivers } = carrier
+				const existTruck = trucks.filter((truck: any) => truck.truck_id === truck_id)
+				const existDriver = drivers.filter((driver: any) => driver.driver_id === driver_id)
+				if (existTruck.length === 1 && existDriver.length === 1) {
+					if (existTruck[0].status !== 100) throw new Error(`400 : Your truck is not avaliable.`)
+					if (existDriver[0].status !== 100) throw new Error(`400 : Your driver is not avaliable.`)
+					const { data: resUpdateJobHistory } = await fetcher.account['carrier'].updateJobHistory(
+						{ username },
+						job_id,
+					)
+					if (!resUpdateJobHistory) {
+						throw new Error(`400 : Update job history not successfully.`)
+					}
+					const { data: resUpdateDriverStatus } = await fetcher.account['carrier'].updateDriverStatus(
+						{ username },
+						{
+							driver_id,
+							driverinfo: { status: 200 },
+						},
+					)
+					if (!resUpdateDriverStatus) {
+						await fetcher.account['carrier'].deleteJobHistory({ username }, job_id)
+						throw new Error(`400 : Update status driver who you pick not successfully.`)
+					}
 
-// 	if (account) {
-// 		try {
-// 			await jobsRepository.updateEmailByIdentifier(identifier, email)
-// 			return `200 : Comfirmed, Email is update successfully`
-// 		} catch (error) {
-// 			console.error(error)
-// 			throw new Error(`400 : Save data is not successfully`)
-// 		}
-// 	}
-// 	throw new Error(`404 : your username is not exist in database.`)
-// }
+					const { data: resUpdateTruckStatus } = await fetcher.account['carrier'].updateTruckStatus(
+						{ username },
+						{ truck_id, truckinfo: { status: 200 } },
+					)
+					if (!resUpdateTruckStatus) {
+						await fetcher.account['carrier'].deleteJobHistory({ username }, job_id)
+						await fetcher.account['carrier'].updateDriverStatus(
+							{ username },
+							{
+								driver_id,
+								driverinfo: { status: 100 },
+							},
+						)
+						throw new Error(`400 : Update status truck who you pick not successfully.`)
+					}
 
-// async function updateProfileJobsAccount(req: updateProfileDTO): Promise<string> {
-// 	const jobsRepository = JobsRepository.getInstance()
-// 	const { identifier, profile } = req
+					const n = await jobsRepository.updateJobsInfoByJobId(job_id, {
+						carrier_id,
+						truck_id,
+						driver_id,
+						status: 200,
+					})
 
-// 	try {
-// 		await jobsRepository.updateProfileJobsAccountByIdentifier(identifier, profile)
-// 		return `200 : Updated, Profile is update successfully`
-// 	} catch (error) {
-// 		console.error(error)
-// 		throw new Error(`400 : Update profile is not successfully`)
-// 	}
-// }
+					if (n && n > 0) return `200 : Done, you are working with this job.`
+					throw new Error(`500 : Your account is not activated.`)
+				}
+				throw new Error(`404 : Your truck or driver aren't exist.`)
+			}
+			throw new Error(`404 : Your account is not activated.`)
+		} else {
+			throw new Error(`400 : This job is picked from another`)
+		}
+	} else {
+		throw new Error(`404 : This job is not exist.`)
+	}
+}
 
-// async function deleteJobsAccount(req: deleteDTO): Promise<string> {
-// 	const jobsRepository = JobsRepository.getInstance()
-// 	let { identifier, password } = req
-// 	let hash: string | null
+async function updateJobInfo(role: string, identifier: string | undefined, info: updateJobInfoDTO): Promise<string> {
+	const jobsRepository = JobsRepository.getInstance()
+	let errorFieldsUpdate: string[] = []
+	const { job_id, jobinfo } = info
+	const job = await jobsRepository.findJobsByJobId(job_id)
 
-// 	try {
-// 		hash = await jobsRepository.findPasswordHashedByIdentifier(identifier)
-// 	} catch (error) {
-// 		console.error(error)
-// 		throw new Error(`404 : Invalid input, Your identifier is not exist`)
-// 	}
+	if (job) {
+		if (role === 'shipper') {
+			errorFieldsUpdate = Validator.validUpdatedFields(jobinfo, 'shipper')
+			if (identifier !== job.shipper_id) {
+				throw new Error(`401 : Unauthorize, Only owner can edit information this job.`)
+			}
+		} else if (role === 'carrier') {
+			errorFieldsUpdate = Validator.validUpdatedFields(jobinfo, 'carrier')
+			if (identifier !== job.carrier_id) {
+				throw new Error(`401 : Unauthorize, This job have carrier picked.`)
+			}
+		} else if (role === 'driver') {
+			errorFieldsUpdate = Validator.validUpdatedFields(jobinfo, 'driver')
+			const { carrier_id } = job
+			const query = {
+				tel: identifier,
+			}
+			const { data } = await fetcher.account['carrier'].findDriverByFiltering({ carrier_id }, query)
+			if (data) {
+				if (data.length <= 0) {
+					throw new Error(`401 : Unauthorize, Only driver who drive with carrier picked the job.`)
+				}
+			} else {
+				throw new Error(
+					`404 : Unauthorize, Your tel number didn't match driver tel number who drive with carrier picked the job.`,
+				)
+			}
+		} else {
+			throw new Error(`401 : Unauthorize, you didn't login or your role can't access this endpoint.`)
+		}
 
-// 	if (hash) {
-// 		const match = await compareHashed(password, hash)
-// 		if (match) {
-// 			const deleteResult: number = await jobsRepository.deleteJobsAccount(identifier)
-// 			if (deleteResult) return `200 : Delete account is successfully`
-// 			throw new Error(`404 : Delete data is not successfully, don't have data in Database`)
-// 		}
-// 		throw new Error(`400 : Invalid input, Your password is not match`)
-// 	}
-// 	throw new Error(`404 : Invalid input, Your identifier is not exist`)
-// }
+		if (errorFieldsUpdate.length > 0) throw new Error(`400 : Invalid Fields! ${errorFieldsUpdate.join(', ')}`)
 
-// async function deActivateJobsAccount(req: deleteDTO): Promise<string> {
-// 	const bias: string = '_deactivete'
-// 	const jobsRepository = JobsRepository.getInstance()
-// 	let { identifier, password } = req
-// 	let hash: string | null
-
-// 	try {
-// 		hash = await jobsRepository.findPasswordHashedByIdentifier(identifier)
-// 	} catch (error) {
-// 		console.log(error)
-// 		throw new Error(`404 : Invalid input, Your identifier is not exist`)
-// 	}
-
-// 	if (hash) {
-// 		const match = await compareHashed(password, hash)
-// 		if (match) {
-// 			try {
-// 				const shipprt_account = (await jobsRepository.findJobsByIdentifier(
-// 					identifier,
-// 				)) as JobsInterface
-// 				const { username } = shipprt_account
-// 				const nModified = await jobsRepository.deActivateJobsAccount(identifier, username, bias)
-// 				if (nModified >= 1) return `200 : DeActivate account is successfully`
-// 			} catch (err) {
-// 				throw new Error(`400 : DeActivate account is not successfully`)
-// 			}
-// 			throw new Error(`404 : Some profile information is not exist in database`)
-// 		}
-// 		throw new Error(`400 : Invalid input, Your password is not match`)
-// 	}
-// 	throw new Error(`404 : Invalid input, Your identifier is not exist`)
-// }
+		try {
+			const n = await jobsRepository.updateJobsInfoByJobId(job_id, jobinfo)
+			if (n && n > 0) return `204 : Updated, Job information is update successfully`
+			throw new Error(`404 : Your job_id didn't exist.`)
+		} catch (error) {
+			console.error(error)
+			throw new Error(`400 : Update job information is not successfully`)
+		}
+	}
+	throw new Error(`404 : Your job is not exist.`)
+}
 
 export default {
 	createJob,
-	findAllJobs
-	// adminFindJobsByIdentifier,
-	// updateProfileJobsAccount,
-	// findProfileJobsAccountByUsername,
-	// createJobsAccount,
-	// confirmedWithEmail,
-	// deleteJobsAccount,
-	// deActivateJobsAccount,
+	findAllJobs,
+	updateJobInfo,
+	pickJob,
 }
