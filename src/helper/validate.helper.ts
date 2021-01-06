@@ -22,4 +22,4 @@ const validUpdatedFields = (profile: whitelistUpdateJobDTO, whitelist_key: strin
 	return errorFieldsUpdate
 }
 
-export { validCheckInput, validCheckID, isNotValidField, validUpdatedFields /* , validCountry */ }
+export { validCheckInput, validCheckID, isNotValidField, validUpdatedFields }
