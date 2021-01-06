@@ -3,8 +3,6 @@ import JobsUsecase from '../usecase/jobs.usecase'
 import responseHandler from '../helper/response.handler'
 import { Payload } from '../entities/dtos/token.dto'
 import { createJobDTO, deleteJobDTO, updateJobInfoDTO, pickJobDTO } from '../entities/dtos/job.dto'
-import * as Validator from '../helper/validate.helper'
-import { profile } from 'console'
 
 class JobsRoutes {
 	public prefix_route = '/jobs'
@@ -32,6 +30,32 @@ class JobsRoutes {
 					const info: createJobDTO = request.body as createJobDTO
 					const jobinfo = { ...info, owner_display_name: display_name, shipper_id }
 					const data = await JobsUsecase.createJob(role, shipper_id, jobinfo)
+					return data
+				}
+				throw new Error('400 : Not shipper account')
+			}, reply)
+			await reply
+		})
+
+		fastify.post(`/delete`, { preValidation: [(fastify as any).verifyAuth] }, async (request, reply) => {
+			responseHandler(async () => {
+				const { sub: shipper_id, role } = request.user as Payload
+				if (role === 'shipper') {
+					const { job_id } = request.body as deleteJobDTO
+					const data = await JobsUsecase.deleteJob(shipper_id, job_id)
+					return data
+				}
+				throw new Error('400 : Not shipper account')
+			}, reply)
+			await reply
+		})
+
+		fastify.post(`/force/delete`, { preValidation: [(fastify as any).verifyAuth] }, async (request, reply) => {
+			responseHandler(async () => {
+				const { sub: shipper_id, role } = request.user as Payload
+				if (role === 'shipper') {
+					const { job_id } = request.body as deleteJobDTO
+					const data = await JobsUsecase.forceDeleteJob(shipper_id, job_id)
 					return data
 				}
 				throw new Error('400 : Not shipper account')

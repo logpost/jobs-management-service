@@ -159,9 +159,55 @@ async function updateJobInfo(role: string, identifier: string | undefined, info:
 	throw new Error(`404 : Your job is not exist.`)
 }
 
+async function deleteJob(shipper_id: string, job_id: string): Promise<string> {
+	const jobsRepository = JobsRepository.getInstance()
+	const job = await jobsRepository.findJobsByJobId(job_id)
+
+	if (job) {
+		if (!job.carrier_id) {
+			if (shipper_id === job.shipper_id) {
+				const nDelete = await fetcher.account['shipper'].deleteJobHistory({ shipper_id }, job_id)
+				if (nDelete && nDelete > 0) {
+					const n = await jobsRepository.updateJobsInfoByJobId(job_id, { permission: 'delete' })
+					if (n && n > 0) return `204 : Delete job is successfully.`
+					throw new Error(`400 : Delete job is not successfully.`)
+				}
+				throw new Error(`500 : Delete job is not successfully because shipper adapter`)
+			}
+			throw new Error(`401 : Unauthorize, Only owner can edit information this job.`)
+		}
+		throw new Error(`401 : Can't delete this job because your job picked by carrier.`)
+	}
+	throw new Error(`404 : Your job is not exist.`)
+}
+
+async function forceDeleteJob(shipper_id: string, job_id: string): Promise<string> {
+	const jobsRepository = JobsRepository.getInstance()
+	const job = await jobsRepository.findJobsByJobId(job_id)
+
+	if (job) {
+		if (!job.carrier_id) {
+			if (shipper_id === job.shipper_id) {
+				const nDelete = await fetcher.account['shipper'].deleteJobHistory({ shipper_id }, job_id)
+				if (nDelete && nDelete > 0) {
+					const n = await jobsRepository.forceDeleteJob(job_id)
+					if (n && n > 0) return `204 : Delete job is successfully.`
+					throw new Error(`400 : Delete job is not successfully.`)
+				}
+				throw new Error(`500 : Delete job is not successfully because shipper adapter`)
+			}
+			throw new Error(`401 : Unauthorize, Only owner can edit information this job.`)
+		}
+		throw new Error(`401 : Can't delete this job because your job picked by carrier.`)
+	}
+	throw new Error(`404 : Your job is not exist.`)
+}
+
 export default {
 	createJob,
 	findAllJobs,
 	updateJobInfo,
 	pickJob,
+	deleteJob,
+	forceDeleteJob,
 }

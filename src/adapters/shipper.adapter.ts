@@ -21,6 +21,15 @@ class ShipperAdapter {
 			return error.response.data
 		}
 	}
+
+	deleteJobHistory = async (identifier: AccountIdentifier, job_id: string) => {
+		try {
+			const res = await this.fetcher.put(`${this.prefix}/srv/job/history/delete`, { identifier, job_id })
+			return res
+		} catch (error) {
+			return error.response.data
+		}
+	}
 }
 
 export default new ShipperAdapter()
