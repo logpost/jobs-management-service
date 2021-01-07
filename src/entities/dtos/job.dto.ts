@@ -5,7 +5,8 @@ interface createJobDTO {
 	carrier_id?: string
 	driver_id?: string
 	truck_id?: string
-	owner_display_name: string
+	shipper_display_name: string
+	carrier_display_name?: string
 	pickup_location: LocationInterface
 	dropoff_location: LocationInterface
 	pickup_date: Date
@@ -41,6 +42,7 @@ interface updateJobInfoDTO {
 interface whitelistUpdateJobForCarrierDTO {
 	driver_id?: string
 	truck_id?: string
+	carrier_display_name?: string
 	status?: number
 }
 interface whitelistUpdateJobForShipperDTO {

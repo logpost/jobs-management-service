@@ -37,7 +37,7 @@ async function createJob(role: string, shipper_id: string, jobinfo: createJobDTO
 }
 
 async function pickJob(account: Payload, infopicked: pickJobDTO): Promise<string> {
-	const { sub: carrier_id, username } = account
+	const { sub: carrier_id, display_name: carrier_display_name, username } = account
 	const { driver_id, truck_id, job_id } = infopicked
 	const jobsRepository = JobsRepository.getInstance()
 	const job = await jobsRepository.findJobsByJobId(job_id)
@@ -91,6 +91,7 @@ async function pickJob(account: Payload, infopicked: pickJobDTO): Promise<string
 						carrier_id,
 						truck_id,
 						driver_id,
+						carrier_display_name,
 						status: 200,
 					})
 
