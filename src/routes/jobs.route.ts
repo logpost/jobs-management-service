@@ -22,6 +22,21 @@ class JobsRoutes {
 			}, reply)
 			await reply
 		})
+        
+        // fastify.get(`/detail/:job_id`, { preValidation: [(fastify as any).verifyAuth] }, async (request, reply) => {
+		// 	responseHandler(async () => {
+		// 		const account = request.user as Payload
+		// 		const infopicked = request.body as pickJobDTO
+		// 		const { role } = account
+
+		// 		if (role === 'carrier') {
+		// 			const data = await JobsUsecase.pickJob(account, infopicked)
+		// 			return data
+		// 		}
+		// 		throw new Error('400 : Not shipper account')
+		// 	}, reply)
+		// 	await reply
+		// })
 
 		fastify.post(`/create`, { preValidation: [(fastify as any).verifyAuth] }, async (request, reply) => {
 			responseHandler(async () => {

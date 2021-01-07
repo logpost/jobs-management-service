@@ -5,6 +5,7 @@ class CarrierAdapter {
 	private prefix = config.carrier.api.prefix_route
 	private prefix_driver = `/driver`
 	private prefix_truck = `/truck`
+	private prefix_job = `/job`
 	private fetcher = axios.create({
 		baseURL: config.carrier.api.base_url,
 		headers: {
@@ -27,9 +28,13 @@ class CarrierAdapter {
 		}
 	}
 
-	updateJobHistory = async (identifier: AccountIdentifier, job_id: string) => {
+	/* 
+        JOB HISTORY ADAPTER
+    */
+
+	addJobHistory = async (identifier: AccountIdentifier, job_id: string) => {
 		try {
-			const res = await this.fetcher.put(`${this.prefix}/srv/job/history/add`, { identifier, job_id })
+			const res = await this.fetcher.put(`${this.prefix_job}/srv/history/add`, { identifier, job_id })
 			return res
 		} catch (error) {
 			return error.response.data
@@ -38,7 +43,16 @@ class CarrierAdapter {
 
 	deleteJobHistory = async (identifier: AccountIdentifier, job_id: string) => {
 		try {
-			const res = await this.fetcher.put(`${this.prefix}/srv/job/history/delete`, { identifier, job_id })
+			const res = await this.fetcher.put(`${this.prefix_job}/srv/history/delete`, { identifier, job_id })
+			return res
+		} catch (error) {
+			return error.response.data
+		}
+	}
+
+	getJobHistory = async (identifier: AccountIdentifier) => {
+		try {
+			const res = await this.fetcher.put(`${this.prefix_job}/srv/history/all`, { identifier })
 			return res
 		} catch (error) {
 			return error.response.data

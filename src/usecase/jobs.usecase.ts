@@ -22,7 +22,7 @@ async function createJob(role: string, shipper_id: string, jobinfo: createJobDTO
 	try {
 		const job_id = await jobsRepository.createJob(jobinfo)
 		if (job_id) {
-			const res = await fetcher.account[role as keyof AccountFactoryInterface].updateJobHistory(
+			const res = await fetcher.account[role as keyof AccountFactoryInterface].addJobHistory(
 				{ shipper_id },
 				job_id,
 			)
@@ -52,7 +52,7 @@ async function pickJob(account: Payload, infopicked: pickJobDTO): Promise<string
 				if (existTruck.length === 1 && existDriver.length === 1) {
 					if (existTruck[0].status !== 100) throw new Error(`400 : Your truck is not avaliable.`)
 					if (existDriver[0].status !== 100) throw new Error(`400 : Your driver is not avaliable.`)
-					const { data: resUpdateJobHistory } = await fetcher.account['carrier'].updateJobHistory(
+					const { data: resUpdateJobHistory } = await fetcher.account['carrier'].addJobHistory(
 						{ username },
 						job_id,
 					)
