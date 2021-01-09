@@ -2,7 +2,15 @@ import { FastifyInstance, FastifyPluginOptions } from 'fastify'
 import JobsUsecase from '../usecase/jobs.usecase'
 import responseHandler from '../helper/response.handler'
 import { Payload } from '../entities/dtos/token.dto'
-import { createJobDTO, deleteJobDTO, updateJobInfoDTO, pickJobDTO } from '../entities/dtos/job.dto'
+import {
+	createJobDTO,
+	deleteJobDTO,
+	updateJobInfoDTO,
+	pickJobDTO,
+	paramDetailJob,
+	telDriverDTO,
+	UserPermissionDTO,
+} from '../entities/dtos/job.dto'
 
 class JobsRoutes {
 	public prefix_route = '/jobs'
@@ -23,17 +31,53 @@ class JobsRoutes {
 			await reply
 		})
 
-		fastify.get(`/detail/:job_id`, { preValidation: [(fastify as any).verifyAuth] }, async (request, reply) => {
+		fastify.get(`/detail/:job_id`, async (request, reply) => {
 			responseHandler(async () => {
-				const account = request.user as Payload
-				const infopicked = request.body as pickJobDTO
-				const { role } = account
+				let user: UserPermissionDTO | null = null
 
-				if (role === 'carrier') {
-					const data = await JobsUsecase.pickJob(account, infopicked)
-					return data
+				const params = request.params as paramDetailJob
+				const { job_id } = params
+
+				const auth = request.headers?.authorization
+				const token = auth?.split(' ')[1] as string
+
+				if (token) {
+					fastify.jwt.verify(token, (error: any, decoded: any) => {
+						if (error) {
+							user = {
+								account: {
+									role: 'guest',
+								} as Payload,
+								permission: 'guest',
+							}
+						} else {
+							user = { account: decoded, permission: 'logposter' }
+						}
+					})
 				}
-				throw new Error('400 : Not shipper account')
+
+				if (!user) {
+					const { driver_tel } = request.query as telDriverDTO
+					if (driver_tel) {
+						user = {
+							account: {
+								sub: driver_tel,
+								role: 'driver',
+							} as Payload,
+							permission: 'guest',
+						}
+					} else {
+						user = {
+							account: {
+								role: 'guest',
+							} as Payload,
+							permission: 'guest',
+						}
+					}
+				}
+
+				const data = await JobsUsecase.getDetailJob(user, job_id)
+				return data
 			}, reply)
 			await reply
 		})

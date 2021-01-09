@@ -12,6 +12,7 @@ const authPlugin = (fastify: FastifyInstance, opts: FastifyPluginOptions, done: 
 
 	fastify.decorate('verifyAuth', async (request: FastifyRequest, reply: FastifyReply) => {
 		try {
+			await request.jwtVerify()
 			const auth: string | undefined = request.headers.authorization
 			const token = auth!.split(' ')[1]
 			if (token) {
@@ -19,7 +20,6 @@ const authPlugin = (fastify: FastifyInstance, opts: FastifyPluginOptions, done: 
 				const { isConfirmEmail } = decodedToken
 				if (!isConfirmEmail) throw { statusCode: 401, message: "your email haven't confirmed." }
 			}
-			await request.jwtVerify()
 		} catch (err) {
 			responseSender(parseResponse(new Error(`${err.statusCode}: Unauthorize, ${err.message}`)), reply)
 		}

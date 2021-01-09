@@ -2,9 +2,10 @@ import AccountFactoryInterface from '../entities/interfaces/data/account.factory
 import AccountFactory from '../factorys/account.factory'
 import { JobInterface } from '../entities/interfaces/data/job.interface'
 import JobsRepository from '../repositories/jobs.repository'
-import { createJobDTO, updateJobInfoDTO, deleteJobDTO, pickJobDTO } from '../entities/dtos/job.dto'
+import { createJobDTO, updateJobInfoDTO, deleteJobDTO, pickJobDTO, UserPermissionDTO } from '../entities/dtos/job.dto'
 import * as Validator from '../helper/validate.helper'
 import { Payload } from '../entities/dtos/token.dto'
+import FormatterJob from '../helper/formatter.handler'
 
 const fetcher = new AccountFactory()
 
@@ -116,46 +117,49 @@ async function updateJobInfo(role: string, identifier: string | undefined, info:
 	const job = await jobsRepository.findJobsByJobId(job_id)
 
 	if (job) {
-		if (role === 'shipper') {
-			errorFieldsUpdate = Validator.validUpdatedFields(jobinfo, 'shipper')
-			if (identifier !== job.shipper_id) {
-				throw new Error(`401 : Unauthorize, Only owner can edit information this job.`)
-			}
-		} else if (role === 'carrier') {
-			errorFieldsUpdate = Validator.validUpdatedFields(jobinfo, 'carrier')
-			if (identifier !== job.carrier_id) {
-				throw new Error(`401 : Unauthorize, This job have carrier picked.`)
-			}
-		} else if (role === 'driver') {
-			errorFieldsUpdate = Validator.validUpdatedFields(jobinfo, 'driver')
-			const { carrier_id } = job
-			const query = {
-				tel: identifier,
-			}
-			const { data } = await fetcher.account['carrier'].findDriverByFiltering({ carrier_id }, query)
-			if (data) {
-				if (data.length <= 0) {
-					throw new Error(`401 : Unauthorize, Only driver who drive with carrier picked the job.`)
+		if (job.permission !== 'delete') {
+			if (role === 'shipper') {
+				errorFieldsUpdate = Validator.validUpdatedFields(jobinfo, 'shipper')
+				if (identifier !== job.shipper_id) {
+					throw new Error(`403 : Unauthorize, Only owner can edit information this job.`)
+				}
+			} else if (role === 'carrier') {
+				errorFieldsUpdate = Validator.validUpdatedFields(jobinfo, 'carrier')
+				if (identifier !== job.carrier_id) {
+					throw new Error(`403 : Unauthorize, This job have carrier picked.`)
+				}
+			} else if (role === 'driver') {
+				errorFieldsUpdate = Validator.validUpdatedFields(jobinfo, 'driver')
+				const { carrier_id } = job
+				const query = {
+					tel: identifier,
+				}
+				const { data } = await fetcher.account['carrier'].findDriverByFiltering({ carrier_id }, query)
+				if (data) {
+					if (data.length <= 0) {
+						throw new Error(`403 : Unauthorize, Only driver who drive with carrier picked the job.`)
+					}
+				} else {
+					throw new Error(
+						`404 : Unauthorize, Your tel number didn't match driver tel number who drive with carrier picked the job.`,
+					)
 				}
 			} else {
-				throw new Error(
-					`404 : Unauthorize, Your tel number didn't match driver tel number who drive with carrier picked the job.`,
-				)
+				throw new Error(`403 : Unauthorize, you didn't login or your role can't access this endpoint.`)
 			}
-		} else {
-			throw new Error(`401 : Unauthorize, you didn't login or your role can't access this endpoint.`)
-		}
 
-		if (errorFieldsUpdate.length > 0) throw new Error(`400 : Invalid Fields! ${errorFieldsUpdate.join(', ')}`)
+			if (errorFieldsUpdate.length > 0) throw new Error(`400 : Invalid Fields! ${errorFieldsUpdate.join(', ')}`)
 
-		try {
-			const n = await jobsRepository.updateJobsInfoByJobId(job_id, jobinfo)
-			if (n && n > 0) return `204 : Updated, Job information is update successfully`
-			throw new Error(`404 : Your job_id didn't exist.`)
-		} catch (error) {
-			console.error(error)
-			throw new Error(`400 : Update job information is not successfully`)
+			try {
+				const n = await jobsRepository.updateJobsInfoByJobId(job_id, jobinfo)
+				if (n && n > 0) return `204 : Updated, Job information is update successfully`
+				throw new Error(`404 : Your job_id didn't exist.`)
+			} catch (error) {
+				console.error(error)
+				throw new Error(`400 : Update job information is not successfully`)
+			}
 		}
+		throw new Error(`403 : Update job information is not successfully, Your job is unavaliable`)
 	}
 	throw new Error(`404 : Your job is not exist.`)
 }
@@ -165,19 +169,22 @@ async function deleteJob(shipper_id: string, job_id: string): Promise<string> {
 	const job = await jobsRepository.findJobsByJobId(job_id)
 
 	if (job) {
-		if (!job.carrier_id) {
-			if (shipper_id === job.shipper_id) {
-				const nDelete = await fetcher.account['shipper'].deleteJobHistory({ shipper_id }, job_id)
-				if (nDelete && nDelete > 0) {
-					const n = await jobsRepository.updateJobsInfoByJobId(job_id, { permission: 'delete' })
-					if (n && n > 0) return `204 : Delete job is successfully.`
-					throw new Error(`400 : Delete job is not successfully.`)
+		if (job.permission !== 'delete') {
+			if (!job.carrier_id) {
+				if (shipper_id === job.shipper_id) {
+					const nDelete = await fetcher.account['shipper'].deleteJobHistory({ shipper_id }, job_id)
+					if (nDelete && nDelete > 0) {
+						const n = await jobsRepository.updateJobsInfoByJobId(job_id, { permission: 'delete' })
+						if (n && n > 0) return `204 : Delete job is successfully.`
+						throw new Error(`400 : Delete job is not successfully.`)
+					}
+					throw new Error(`500 : Delete job is not successfully because shipper adapter`)
 				}
-				throw new Error(`500 : Delete job is not successfully because shipper adapter`)
+				throw new Error(`403 : Unauthorize, Only owner can edit information this job.`)
 			}
-			throw new Error(`401 : Unauthorize, Only owner can edit information this job.`)
+			throw new Error(`403 : Can't delete this job because your job picked by carrier.`)
 		}
-		throw new Error(`401 : Can't delete this job because your job picked by carrier.`)
+		throw new Error(`403 : Your job is unavaliable`)
 	}
 	throw new Error(`404 : Your job is not exist.`)
 }
@@ -187,19 +194,85 @@ async function forceDeleteJob(shipper_id: string, job_id: string): Promise<strin
 	const job = await jobsRepository.findJobsByJobId(job_id)
 
 	if (job) {
-		if (!job.carrier_id) {
-			if (shipper_id === job.shipper_id) {
-				const nDelete = await fetcher.account['shipper'].deleteJobHistory({ shipper_id }, job_id)
-				if (nDelete && nDelete > 0) {
-					const n = await jobsRepository.forceDeleteJob(job_id)
-					if (n && n > 0) return `204 : Delete job is successfully.`
-					throw new Error(`400 : Delete job is not successfully.`)
+		if (job.permission !== 'delete') {
+			if (!job.carrier_id) {
+				if (shipper_id === job.shipper_id) {
+					const nDelete = await fetcher.account['shipper'].deleteJobHistory({ shipper_id }, job_id)
+					if (nDelete && nDelete > 0) {
+						const n = await jobsRepository.forceDeleteJob(job_id)
+						if (n && n > 0) return `204 : Delete job is successfully.`
+						throw new Error(`400 : Delete job is not successfully.`)
+					}
+					throw new Error(`500 : Delete job is not successfully because shipper adapter`)
 				}
-				throw new Error(`500 : Delete job is not successfully because shipper adapter`)
+				throw new Error(`403 : Unauthorize, Only owner can edit information this job.`)
 			}
-			throw new Error(`401 : Unauthorize, Only owner can edit information this job.`)
+			throw new Error(`403 : Can't delete this job because your job picked by carrier.`)
 		}
-		throw new Error(`401 : Can't delete this job because your job picked by carrier.`)
+		throw new Error(`403 : Your job is unavaliable`)
+	}
+	throw new Error(`404 : Your job is not exist.`)
+}
+
+async function getDetailJob(user: UserPermissionDTO, job_id: string): Promise<JobInterface> {
+	const jobsRepository = JobsRepository.getInstance()
+
+	let { permission, account } = user
+	const { role, account_type, sub: identifier } = account
+	const job = await jobsRepository.findJobsByJobId(job_id)
+	if (job) {
+		if (job.permission !== 'delete') {
+			if (
+				role !== 'driver' &&
+				job[`${role}_id` as keyof JobInterface] &&
+				job[`${role}_id` as keyof JobInterface] === identifier
+			) {
+				// this permission will pass all condition below.
+				permission = 'owner'
+			}
+
+			if (permission === 'logposter' || permission === 'guest') {
+				if (role !== 'driver') {
+					if (job.status !== 100) {
+						throw new Error(`403 : This job is unavaliable`)
+					}
+				} else {
+					// driver conditions
+					if (job.status !== 100) {
+						const { carrier_id } = job
+						const query = {
+							tel: identifier,
+						}
+						const { data } = await fetcher.account['carrier'].findDriverByFiltering({ carrier_id }, query)
+						if (data) {
+							if (data.length <= 0) {
+								throw new Error(`403 : Unauthorize, Only driver who drive with carrier picked the job.`)
+							}
+						} else {
+							throw new Error(
+								`404 : Unauthorize, Your tel number didn't match driver tel number who drive with carrier picked the job.`,
+							)
+						}
+					} else {
+						throw new Error(`403 : Unauthorize, This job didn't have carrier pick.`)
+					}
+				}
+			}
+
+			const formatter = new FormatterJob(
+				{
+					account: {
+						account_type: account_type, // safe to undefined when user is driver
+						role,
+					} as Payload,
+					permission,
+				},
+				job,
+			)
+
+			return formatter.getter()
+		}
+		throw new Error(`403 : Your job is unavaliable`)
 	}
 	throw new Error(`404 : Your job is not exist.`)
 }
@@ -211,4 +284,5 @@ export default {
 	pickJob,
 	deleteJob,
 	forceDeleteJob,
+	getDetailJob,
 }
