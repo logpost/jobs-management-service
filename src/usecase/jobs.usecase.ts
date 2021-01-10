@@ -1,9 +1,15 @@
-import * as mongoose from 'mongoose'
 import AccountFactoryInterface from '../entities/interfaces/data/account.factory.interface'
 import AccountFactory from '../factorys/account.factory'
 import { JobInterface } from '../entities/interfaces/data/job.interface'
 import JobsRepository from '../repositories/jobs.repository'
-import { createJobDTO, updateJobInfoDTO, deleteJobDTO, pickJobDTO, UserPermissionDTO } from '../entities/dtos/job.dto'
+import {
+	createJobDTO,
+	updateJobInfoDTO,
+	deleteJobDTO,
+	pickJobDTO,
+	UserPermissionDTO,
+	whitelistUpdateJobForDriverDTO,
+} from '../entities/dtos/job.dto'
 import * as Validator from '../helper/validate.helper'
 import { Payload } from '../entities/dtos/token.dto'
 import FormatterJob from '../helper/formatter.handler'
@@ -46,12 +52,14 @@ async function findAllJobs(isLogposter: boolean): Promise<JobInterface[]> {
 		const jobsRepository = JobsRepository.getInstance()
 		let passport: UserPermissionDTO
 		const jobs = await jobsRepository.findAllJobs()
-
+		// console.log(jobs)
 		if (jobs.length > 0) {
 			const jobsFiltered = await JobsFilterFactory.filterByQuery(jobs, {
 				status: 100,
 				permission: 'public',
 			})
+
+			// console.log(jobsFiltered)
 			if (isLogposter) {
 				passport = {
 					account: {
@@ -155,6 +163,8 @@ async function pickJob(account: Payload, infopicked: pickJobDTO): Promise<string
 						truck_id,
 						driver_id,
 						carrier_display_name,
+						driver_name: existDriver[0].name,
+						license_number: existTruck[0].license_number,
 						status: 200,
 					})
 
@@ -196,10 +206,25 @@ async function updateJobInfo(role: string, identifier: string | undefined, info:
 				const query = {
 					tel: identifier,
 				}
-				const { data } = await fetcher.account['carrier'].findDriverByFiltering({ carrier_id }, query)
-				if (data) {
-					if (data.length <= 0) {
+				const { data: driver } = await fetcher.account['carrier'].findDriverByFiltering({ carrier_id }, query)
+				if (driver) {
+					if (driver.length <= 0) {
 						throw new Error(`403 : Unauthorize, Only driver who drive with carrier picked the job.`)
+					}
+					// pre-update, this statement for success verify driver
+					const { status } = jobinfo as whitelistUpdateJobForDriverDTO
+					if (status === 800) {
+						await fetcher.account['carrier'].updateDriverStatus(
+							{ carrier_id: job.carrier_id },
+							{
+								driver_id: job.driver_id,
+								driverinfo: { status: 100 },
+							},
+						)
+						await fetcher.account['carrier'].updateTruckStatus(
+							{ carrier_id: job.carrier_id },
+							{ truck_id: job.truck_id, truckinfo: { status: 100 } },
+						)
 					}
 				} else {
 					throw new Error(

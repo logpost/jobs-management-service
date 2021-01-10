@@ -10,6 +10,8 @@ interface JobDocument extends Document {
 	readonly truck_id: string
 	readonly shipper_display_name: string
 	readonly carrier_display_name: string
+	readonly driver_name: string
+	readonly license_number: string
 	readonly pickup_location: LocationInterface
 	readonly dropoff_location: LocationInterface
 	readonly pickup_date: Date

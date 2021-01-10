@@ -20,6 +20,8 @@ export const whitelist: Whitelists = {
 		driver_id: { field: 'driver_id' },
 		truck_id: { field: 'truck_id' },
 		status: { field: 'status' },
+		driver_name: { field: 'driver_name' },
+		license_number: { field: 'license_number' },
 	},
 	driver: {
 		status: { field: 'status' },
