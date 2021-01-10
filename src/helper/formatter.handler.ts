@@ -2,10 +2,11 @@ import { UserPermissionDTO } from '../entities/dtos/job.dto'
 import { JobInterface } from '../entities/interfaces/data/job.interface'
 
 class FormatterJob {
+	private is_bulk: boolean = false
 	private role: string
 	private permission: string
 	private account_type: string
-	private job: JobInterface
+	private job: JobInterface | JobInterface[]
 	private guard: any
 
 	private blacklist_fields = {
@@ -43,13 +44,19 @@ class FormatterJob {
 		},
 	} as any
 
-	constructor(user: UserPermissionDTO, job: JobInterface) {
+	constructor(user: UserPermissionDTO, job: JobInterface | JobInterface[]) {
 		const {
 			account: { role, account_type },
 			permission,
 		} = user
 
-		this.job = JSON.parse(JSON.stringify(job))
+		if (Array.isArray(job)) {
+			this.job = [...job]
+			this.is_bulk = true
+		} else {
+			this.job = JSON.parse(JSON.stringify(job))
+		}
+
 		this.role = role
 		this.permission = permission
 		this.account_type = account_type
@@ -57,8 +64,9 @@ class FormatterJob {
 		this.guard = this.createGuard()
 	}
 
-	public getter() {
-		return this.transform()
+	public async getter() {
+		if (!this.is_bulk) return await this.transformOne()
+		return await this.transformMany()
 	}
 
 	private createGuard() {
@@ -68,17 +76,34 @@ class FormatterJob {
 		return this.blacklist_fields[this.permission][this.role][this.account_type]
 	}
 
-	private async transform() {
-		let dataParsed: any = {}
+	private async transformOne() {
+		let jobParsed: any = {}
 
 		const promise = Object.keys(this.job).map((key) => {
 			if (this.guard.includes(key)) {
 				return
 			}
-			dataParsed[key] = this.job[key as keyof JobInterface]
+			jobParsed[key] = (this.job as JobInterface)[key as keyof JobInterface]
 		})
 		await Promise.all(promise)
-		return dataParsed
+		return jobParsed
+	}
+
+	private async transformMany() {
+		let jobsParsed: any = []
+		const promise = (this.job as JobInterface[]).map(async (task: JobInterface) => {
+			let jobParsed: any = {}
+			const promise = Object.keys(task).map((key) => {
+				if (this.guard.includes(key)) {
+					return
+				}
+				jobParsed[key] = task[key as keyof JobInterface] as JobInterface
+			})
+			await Promise.all(promise)
+			jobsParsed.push(jobParsed)
+		})
+		await Promise.all(promise)
+		return jobsParsed
 	}
 }
 

@@ -25,7 +25,20 @@ class JobsRoutes {
 
 		fastify.get(`/all`, async (request, reply) => {
 			responseHandler(async () => {
-				const data = await JobsUsecase.findAllJobs()
+				let isLogposter = false
+				const auth = request.headers?.authorization
+				const token = auth?.split(' ')[1] as string
+
+				if (token) {
+					fastify.jwt.verify(token, (error: any, decoded: any) => {
+						if (error) {
+							throw new Error(`401 : Unauthorize, ${error.message}`)
+						} else {
+							isLogposter = true
+						}
+					})
+				}
+				const data = await JobsUsecase.findAllJobs(isLogposter)
 				return data
 			}, reply)
 			await reply
@@ -50,6 +63,7 @@ class JobsRoutes {
 								} as Payload,
 								permission: 'guest',
 							}
+							throw new Error(`401 : Unauthorize, ${error.message}`)
 						} else {
 							user = { account: decoded, permission: 'logposter' }
 						}

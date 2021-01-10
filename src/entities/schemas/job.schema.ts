@@ -23,7 +23,7 @@ export const JobSchema = new mongoose.Schema(
 		description: { type: String, default: '' },
 		status: { type: Number, default: 100, enum: [100, 200, 300, 400, 500, 600, 700, 800, 900], required: true },
 		distance: { type: Number, default: 1, required: true },
-		permission: { type: String, default: 'pubilc', enum: ['pubilc', 'private', 'delete'], required: true },
+		permission: { type: String, default: 'public', enum: ['public', 'private', 'delete'], required: true },
 		waiting_time: { type: Number, default: 0, required: true },
 		delete_at: { type: Date, default: new Date() },
 	},

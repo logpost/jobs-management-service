@@ -6,13 +6,44 @@ import { createJobDTO, updateJobInfoDTO, deleteJobDTO, pickJobDTO, UserPermissio
 import * as Validator from '../helper/validate.helper'
 import { Payload } from '../entities/dtos/token.dto'
 import FormatterJob from '../helper/formatter.handler'
+import JobsFilterFactory from '../filters/jobs.filter.factory'
 
 const fetcher = new AccountFactory()
 
-async function findAllJobs(): Promise<JobInterface[]> {
+async function findAllJobs(isLogposter: boolean): Promise<JobInterface[]> {
 	try {
 		const jobsRepository = JobsRepository.getInstance()
-		return await jobsRepository.findAllJobs()
+		let passport: UserPermissionDTO
+		const jobs = await jobsRepository.findAllJobs()
+
+		if (jobs.length > 0) {
+			const jobsFiltered = await JobsFilterFactory.filterByQuery(jobs, {
+				status: 100,
+				permission: 'public',
+			})
+			if (isLogposter) {
+				passport = {
+					account: {
+						role: 'carrier',
+						account_type: 'personal',
+					} as Payload,
+					permission: 'logposter',
+				}
+			} else {
+				passport = {
+					account: {
+						role: 'guest',
+						account_type: 'guest',
+					} as Payload,
+					permission: 'guest',
+				}
+			}
+
+			const formatter = new FormatterJob(passport, jobsFiltered)
+			return await formatter.getter()
+		}
+
+		return jobs
 	} catch (error) {
 		throw new Error(`400 : Find all jobs is not successfully`)
 	}
@@ -270,7 +301,7 @@ async function getDetailJob(user: UserPermissionDTO, job_id: string): Promise<Jo
 				job,
 			)
 
-			return formatter.getter()
+			return await formatter.getter()
 		}
 		throw new Error(`403 : Your job is unavaliable`)
 	}
