@@ -13,7 +13,7 @@ import {
 import * as Validator from '../helper/validate.helper'
 import { Payload } from '../entities/dtos/token.dto'
 import FormatterJob from '../helper/formatter.handler'
-import JobsFilterFactory from '../filters/jobs.filter.factory'
+import JobFilterFactory from '../filters/jobs.filter.factory'
 
 const fetcher = new AccountFactory()
 
@@ -52,14 +52,13 @@ async function findAllJobs(isLogposter: boolean): Promise<JobInterface[]> {
 		const jobsRepository = JobsRepository.getInstance()
 		let passport: UserPermissionDTO
 		const jobs = await jobsRepository.findAllJobs()
-		// console.log(jobs)
+
 		if (jobs.length > 0) {
-			const jobsFiltered = await JobsFilterFactory.filterByQuery(jobs, {
+			const jobsFiltered = await JobFilterFactory.filterByQuery(jobs, {
 				status: 100,
 				permission: 'public',
 			})
 
-			// console.log(jobsFiltered)
 			if (isLogposter) {
 				passport = {
 					account: {
@@ -259,8 +258,8 @@ async function deleteJob(shipper_id: string, job_id: string): Promise<string> {
 		if (job.permission !== 'delete') {
 			if (!job.carrier_id) {
 				if (shipper_id === job.shipper_id) {
-					const nDelete = await fetcher.account['shipper'].deleteJobHistory({ shipper_id }, job_id)
-					if (nDelete && nDelete > 0) {
+					const { data } = await fetcher.account['shipper'].deleteJobHistory({ shipper_id }, job_id)
+					if (data) {
 						const n = await jobsRepository.updateJobsInfoByJobId(job_id, { permission: 'delete' })
 						if (n && n > 0) return `204 : Delete job is successfully.`
 						throw new Error(`400 : Delete job is not successfully.`)

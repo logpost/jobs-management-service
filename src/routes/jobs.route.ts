@@ -119,7 +119,7 @@ class JobsRoutes {
 			await reply
 		})
 
-		fastify.post(`/delete`, { preValidation: [(fastify as any).verifyAuth] }, async (request, reply) => {
+		fastify.put(`/delete`, { preValidation: [(fastify as any).verifyAuth] }, async (request, reply) => {
 			responseHandler(async () => {
 				const { sub: shipper_id, role } = request.user as Payload
 				if (role === 'shipper') {

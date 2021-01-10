@@ -34,7 +34,7 @@ class JobsRepository {
 	}
 
 	public async findAllJobs(): Promise<JobInterface[]> {
-		return await this._model.find({})
+		return await this._model.find({}).sort({ created_at: -1 })
 	}
 
 	public async createJob(jobinfo: createJobDTO): Promise<string> {
@@ -54,12 +54,14 @@ class JobsRepository {
 	}
 
 	public async findJobsByManyJobId(jobs_id: string[]): Promise<JobInterface[]> {
-		const result: JobInterface[] = await this._model.find(
-			{ job_id: { $in: [...jobs_id] } },
-			{
-				_id: 0,
-			},
-		)
+		const result: JobInterface[] = await this._model
+			.find(
+				{ job_id: { $in: [...jobs_id] } },
+				{
+					_id: 0,
+				},
+			)
+			.sort({ created_at: -1 })
 		return result
 	}
 }
