@@ -1,3 +1,4 @@
+import * as mongoose from 'mongoose'
 import { model, Model } from 'mongoose'
 import config from '../config/config'
 import { JobInterface } from '../entities/interfaces/data/job.interface'
@@ -50,6 +51,16 @@ class JobsRepository {
 	public async forceDeleteJob(job_id: string): Promise<number> {
 		const result = await this._model.deleteOne({ job_id })
 		return result.deletedCount as number
+	}
+
+	public async findJobsByManyJobId(jobs_id: string[]): Promise<JobInterface[]> {
+		const result: JobInterface[] = await this._model.find(
+			{ job_id: { $in: [...jobs_id] } },
+			{
+				_id: 0,
+			},
+		)
+		return result
 	}
 }
 

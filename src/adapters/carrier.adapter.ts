@@ -24,6 +24,7 @@ class CarrierAdapter {
 			const res = await this.fetcher.get(`${this.prefix}/srv/profile/${username}`)
 			return res
 		} catch (error) {
+			console.log(error)
 			return error.response.data
 		}
 	}
@@ -37,6 +38,7 @@ class CarrierAdapter {
 			const res = await this.fetcher.put(`${this.prefix_job}/srv/history/add`, { identifier, job_id })
 			return res
 		} catch (error) {
+			console.log(error)
 			return error.response.data
 		}
 	}
@@ -46,15 +48,17 @@ class CarrierAdapter {
 			const res = await this.fetcher.put(`${this.prefix_job}/srv/history/delete`, { identifier, job_id })
 			return res
 		} catch (error) {
+			console.log(error)
 			return error.response.data
 		}
 	}
 
 	getJobHistory = async (identifier: AccountIdentifier) => {
 		try {
-			const res = await this.fetcher.put(`${this.prefix_job}/srv/history/all`, { identifier })
+			const res = await this.fetcher.post(`${this.prefix_job}/srv/history/all`, { identifier })
 			return res
 		} catch (error) {
+			console.log(error)
 			return error.response.data
 		}
 	}

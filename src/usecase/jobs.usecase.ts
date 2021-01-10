@@ -1,3 +1,4 @@
+import * as mongoose from 'mongoose'
 import AccountFactoryInterface from '../entities/interfaces/data/account.factory.interface'
 import AccountFactory from '../factorys/account.factory'
 import { JobInterface } from '../entities/interfaces/data/job.interface'
@@ -9,6 +10,36 @@ import FormatterJob from '../helper/formatter.handler'
 import JobsFilterFactory from '../filters/jobs.filter.factory'
 
 const fetcher = new AccountFactory()
+
+async function findOwnedJobs(role: string, username: string): Promise<JobInterface[]> {
+	try {
+		const jobsRepository = JobsRepository.getInstance()
+
+		const { data: job_history } = await fetcher.account[role as keyof AccountFactoryInterface].getJobHistory({
+			username,
+		})
+
+		if (job_history) {
+			if (job_history.length > 0) {
+				let jobs_id: string[] = []
+				job_history.map((job: any) => {
+					jobs_id.push(job.job_id)
+				})
+
+				try {
+					const jobs = await jobsRepository.findJobsByManyJobId(jobs_id)
+					return jobs
+				} catch (error) {
+					throw new Error(`500 : Cant get your job history.`)
+				}
+			}
+			return job_history
+		}
+		throw new Error('404 : Your account is not exist.')
+	} catch (error) {
+		throw new Error(`400 : Find owned jobs is not successfully`)
+	}
+}
 
 async function findAllJobs(isLogposter: boolean): Promise<JobInterface[]> {
 	try {
@@ -316,4 +347,5 @@ export default {
 	deleteJob,
 	forceDeleteJob,
 	getDetailJob,
+	findOwnedJobs,
 }

@@ -23,6 +23,15 @@ class JobsRoutes {
 			await reply
 		})
 
+		fastify.get(`/owned`, { preValidation: [(fastify as any).verifyAuth] }, async (request, reply) => {
+			responseHandler(async () => {
+				const { username, role } = request.user as Payload
+				const data = await JobsUsecase.findOwnedJobs(role, username)
+				return data
+			}, reply)
+			await reply
+		})
+
 		fastify.get(`/all`, async (request, reply) => {
 			responseHandler(async () => {
 				let isLogposter = false
