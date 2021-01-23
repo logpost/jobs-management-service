@@ -4,10 +4,9 @@ WORKDIR /usr/src/app
 
 ARG GIT_ACCESS_TOKEN_CURL_CONFIG
 
-COPY package*.json ./
+COPY *.sh *.json *.js Makefile ./
 COPY src src/ 
 COPY config config/
-COPY .babelrc ./
 
 RUN curl -o production.yml https://${GIT_ACCESS_TOKEN_CURL_CONFIG}@raw.githubusercontent.com/logpost/logpost-environment/master/environment/jobs-management-service/production.yml
 RUN curl -o development.yml https://${GIT_ACCESS_TOKEN_CURL_CONFIG}@raw.githubusercontent.com/logpost/logpost-environment/master/environment/jobs-management-service/development.yml
@@ -24,5 +23,5 @@ COPY --from=builder /usr/src/app/node_modules node_modules/
 COPY --from=builder /usr/src/app/dist dist/
 COPY --from=builder /usr/src/app/config config/
 COPY --from=builder /usr/src/app/package.json .
-EXPOSE 8080 8080
+EXPOSE 8082 8082
 CMD [ "npm", "run", "start:stag"]
