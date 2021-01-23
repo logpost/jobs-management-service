@@ -2,7 +2,18 @@
 FROM node:14.2 as builder
 WORKDIR /usr/src/app
 
-COPY . .
+ARG GIT_ACCESS_TOKEN_CURL_CONFIG
+
+COPY package*.json ./
+COPY src src/ 
+COPY config config/
+COPY .babelrc ./
+
+RUN curl -o production.yml https://${GIT_ACCESS_TOKEN_CURL_CONFIG}@raw.githubusercontent.com/logpost/logpost-environment/master/environment/jobs-management-service/production.yml
+RUN curl -o development.yml https://${GIT_ACCESS_TOKEN_CURL_CONFIG}@raw.githubusercontent.com/logpost/logpost-environment/master/environment/jobs-management-service/development.yml
+RUN curl -o staging.yml https://${GIT_ACCESS_TOKEN_CURL_CONFIG}@raw.githubusercontent.com/logpost/logpost-environment/master/environment/jobs-management-service/staging.yml
+RUN mv -f production.yml staging.yml development.yml config
+
 RUN npm ci
 RUN npm run build
 
@@ -13,5 +24,5 @@ COPY --from=builder /usr/src/app/node_modules node_modules/
 COPY --from=builder /usr/src/app/dist dist/
 COPY --from=builder /usr/src/app/config config/
 COPY --from=builder /usr/src/app/package.json .
-EXPOSE 8082 8082
+EXPOSE 8080 8080
 CMD [ "npm", "run", "start:stag"]
