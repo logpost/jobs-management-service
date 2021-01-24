@@ -16,6 +16,7 @@ interface JobDocument extends Document {
 	readonly dropoff_location: LocationInterface
 	readonly pickup_date: Date
 	readonly dropoff_date: Date
+	readonly duration: number
 	readonly weight: number
 	readonly carrier_specification: CarrierSpecificationInterface
 	readonly product_type: string

@@ -22,6 +22,7 @@ interface createJobDTO {
 	dropoff_location: LocationInterface
 	pickup_date: Date
 	dropoff_date: Date
+	duration: number
 	weight: number
 	carrier_specification: CarrierSpecificationInterface
 	product_type: string
@@ -67,6 +68,7 @@ interface whitelistUpdateJobForShipperDTO {
 	dropoff_location?: LocationInterface
 	pickup_date?: Date
 	dropoff_date?: Date
+	duration?: number
 	weight?: number
 	carrier_specification?: CarrierSpecificationInterface
 	product_type?: string
@@ -92,6 +94,7 @@ interface queryJobDTO {
 	license_number?: string
 	pickup_location?: LocationInterface
 	dropoff_location?: LocationInterface
+	duration?: number
 	pickup_date?: Date
 	dropoff_date?: Date
 	weight?: number

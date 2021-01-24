@@ -11,6 +11,7 @@ export const whitelist: Whitelists = {
 		product_type: { field: 'product_type' },
 		offer_price: { field: 'offer_price' },
 		description: { field: 'description' },
+		duration: { field: 'duration' },
 		status: { field: 'status' },
 		distance: { field: 'distance' },
 		permission: { field: 'permission' },

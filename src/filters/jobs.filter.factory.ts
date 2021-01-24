@@ -60,6 +60,9 @@ class JobFilterFactory {
 		'dropoff_location.longitude': (job: JobInterface, query: string) => {
 			return job.dropoff_location.longitude === parseInt(query, 10)
 		},
+		duration: (job: JobInterface, query: string) => {
+			return job.weight === parseInt(query, 10)
+		},
 		weight: (job: JobInterface, query: string) => {
 			return job.weight === parseInt(query, 10)
 		},

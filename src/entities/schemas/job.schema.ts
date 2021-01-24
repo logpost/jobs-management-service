@@ -17,6 +17,7 @@ export const JobSchema = new mongoose.Schema(
 		dropoff_location: { type: LocationSchema, required: true }, // Google GPS Object (mock)
 		pickup_date: { type: Date, required: true },
 		dropoff_date: { type: Date, required: true },
+		duration: { type: Number, required: true },
 		weight: { type: Number, required: true },
 		carrier_specification: { type: CarrierSpecificationSchema, required: true }, // Spec's truck Object (mock)
 		product_type: { type: String, default: '', required: true },
