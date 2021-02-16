@@ -9,6 +9,7 @@ export const whitelist: Whitelists = {
 		weight: { field: 'weight' },
 		carrier_specification: { field: 'carrier_specification' },
 		product_type: { field: 'product_type' },
+		auto_price: { field: 'auto_price' },
 		offer_price: { field: 'offer_price' },
 		description: { field: 'description' },
 		duration: { field: 'duration' },
