@@ -13,8 +13,8 @@ export const JobSchema = new mongoose.Schema(
 		carrier_display_name: { type: String, default: '' },
 		driver_name: { type: String, default: '' },
 		license_number: { type: String, default: '', trim: true },
-		pickup_location: { type: LocationSchema, required: true }, // Google GPS Object (mock)
-		dropoff_location: { type: LocationSchema, required: true }, // Google GPS Object (mock)
+		pickup_location: { type: LocationSchema, required: true },
+		dropoff_location: { type: LocationSchema, required: true },
 		pickup_date: { type: Date, required: true },
 		dropoff_date: { type: Date, required: true },
 		duration: { type: Number, required: true },
