@@ -1,6 +1,8 @@
 import axios from 'axios'
+
 import config from '../config/config'
 import { AccountIdentifier } from '../entities/interfaces/data/account.interface'
+
 class CarrierAdapter {
 	private prefix = config.carrier.api.prefix_route
 	private prefix_driver = `/driver`
@@ -19,9 +21,9 @@ class CarrierAdapter {
         CARRIER ADAPTER
     */
 
-	findAccountByUsername = async (username: string) => {
+	findAccountByUsername = async (identifier: string, field: string) => {
 		try {
-			const res = await this.fetcher.get(`${this.prefix}/srv/profile/${username}`)
+			const res = await this.fetcher.get(`${this.prefix}/srv/profile?${field}=${identifier}`)
 			return res
 		} catch (error) {
 			console.log(error)

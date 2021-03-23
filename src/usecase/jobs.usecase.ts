@@ -1,19 +1,19 @@
-import AccountFactoryInterface from '../entities/interfaces/data/account.factory.interface'
-import AccountFactory from '../factorys/account.factory'
-import { JobInterface } from '../entities/interfaces/data/job.interface'
-import JobsRepository from '../repositories/jobs.repository'
 import {
 	createJobDTO,
-	updateJobInfoDTO,
 	deleteJobDTO,
 	pickJobDTO,
+	updateJobInfoDTO,
 	UserPermissionDTO,
 	whitelistUpdateJobForDriverDTO,
 } from '../entities/dtos/job.dto'
-import * as Validator from '../helper/validate.helper'
 import { Payload } from '../entities/dtos/token.dto'
-import FormatterJob from '../helper/formatter.handler'
+import AccountFactoryInterface from '../entities/interfaces/data/account.factory.interface'
+import { JobInterface } from '../entities/interfaces/data/job.interface'
+import AccountFactory from '../factorys/account.factory'
 import JobFilterFactory from '../filters/jobs.filter.factory'
+import FormatterJob from '../helper/formatter.handler'
+import * as Validator from '../helper/validate.helper'
+import JobsRepository from '../repositories/jobs.repository'
 
 const fetcher = new AccountFactory()
 
@@ -114,7 +114,7 @@ async function pickJob(account: Payload, infopicked: pickJobDTO): Promise<string
 	if (job) {
 		const { carrier_id: carrier_picked } = job
 		if (!carrier_picked) {
-			const { data: carrier } = await fetcher.account['carrier'].findAccountByUsername(username)
+			const { data: carrier } = await fetcher.account['carrier'].findAccountByUsername(username, 'username')
 			if (carrier) {
 				const { trucks, drivers } = carrier
 				const existTruck = trucks.filter((truck: any) => truck.truck_id === truck_id)
